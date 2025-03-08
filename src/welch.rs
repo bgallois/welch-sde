@@ -85,8 +85,11 @@ impl<'a, T: Signal, W: Window<T>> Welch<'a, T, W> {
             .windows(n)
             .step_by(d)
             .flat_map(|s| {
+                let mean = s.iter().copied().sum::<T>() / T::from_usize(s.len()).unwrap();
+                let detrended_segment: Vec<T> = s.iter().map(|&x| x - mean).collect();
                 let mut buffer: Vec<Complex<T>> = vec![Complex::zero(); m];
-                s.iter()
+                detrended_segment
+                    .iter()
                     .zip(self.window.weights())
                     .map(|(&x, &w)| x * w)
                     .zip(&mut buffer)
